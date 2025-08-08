@@ -5,8 +5,8 @@ from openai import OpenAI
 
 class FinancialSituationMemory:
     def __init__(self, name, config):
-        if config["backend_url"] == "http://localhost:11434/v1":
-            self.embedding = "nomic-embed-text"
+        if config["backend_url"] == "http://10.1.203.33:11434/v1":
+            self.embedding = "nomic-embed-text:v1.5"
         else:
             self.embedding = "text-embedding-3-small"
         self.client = OpenAI(base_url=config["backend_url"])

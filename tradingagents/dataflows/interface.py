@@ -22,7 +22,7 @@ def get_finnhub_news(
         "Search query of a company's, e.g. 'AAPL, TSM, etc.",
     ],
     curr_date: Annotated[str, "Current date in yyyy-mm-dd format"],
-    look_back_days: Annotated[int, "how many days to look back"],
+    look_back_days: Annotated[int, "how many days to look back"]=30,
 ):
     """
     Retrieve news about a company within a time frame
@@ -64,15 +64,15 @@ def get_finnhub_company_insider_sentiment(
         str,
         "current date of you are trading at, yyyy-mm-dd",
     ],
-    look_back_days: Annotated[int, "number of days to look back"],
+    look_back_days: Annotated[int, "number of days to look back"] = 30,
 ):
     """
-    Retrieve insider sentiment about a company (retrieved from public SEC information) for the past 15 days
+    Retrieve insider sentiment about a company (retrieved from public SEC information) for the past 30 days
     Args:
         ticker (str): ticker symbol of the company
         curr_date (str): current date you are trading on, yyyy-mm-dd
     Returns:
-        str: a report of the sentiment in the past 15 days starting at curr_date
+        str: a report of the sentiment in the past 30 days starting at curr_date
     """
 
     date_obj = datetime.strptime(curr_date, "%Y-%m-%d")
@@ -105,15 +105,15 @@ def get_finnhub_company_insider_transactions(
         str,
         "current date you are trading at, yyyy-mm-dd",
     ],
-    look_back_days: Annotated[int, "how many days to look back"],
+    look_back_days: Annotated[int, "how many days to look back"] = 30,
 ):
     """
-    Retrieve insider transcaction information about a company (retrieved from public SEC information) for the past 15 days
+    Retrieve insider transcaction information about a company (retrieved from public SEC information) for the past 30 days
     Args:
         ticker (str): ticker symbol of the company
         curr_date (str): current date you are trading at, yyyy-mm-dd
     Returns:
-        str: a report of the company's insider transaction/trading informtaion in the past 15 days
+        str: a report of the company's insider transaction/trading informtaion in the past 30 days
     """
 
     date_obj = datetime.strptime(curr_date, "%Y-%m-%d")
@@ -126,18 +126,17 @@ def get_finnhub_company_insider_transactions(
         return ""
 
     result_str = ""
-
     seen_dicts = []
-    for date, senti_list in data.items():
-        for entry in senti_list:
+    for date, trans_list in data.items():
+        for entry in trans_list:
             if entry not in seen_dicts:
-                result_str += f"### Filing Date: {entry['filingDate']}, {entry['name']}:\nChange:{entry['change']}\nShares: {entry['share']}\nTransaction Price: {entry['transactionPrice']}\nTransaction Code: {entry['transactionCode']}\n\n"
+                result_str += f"### {entry['filingDate']}:\nInsider: {entry['name']}\nTitle: {entry['title']}\nTransaction Type: {entry['transactionType']}\nShares: {entry['shares']}\nValue: {entry['value']}\n\n"
                 seen_dicts.append(entry)
 
     return (
-        f"## {ticker} insider transactions from {before} to {curr_date}:\n"
+        f"## {ticker} Insider Transaction Data for {before} to {curr_date}:\n"
         + result_str
-        + "The change field reflects the variation in share count—here a negative number indicates a reduction in holdings—while share specifies the total number of shares involved. The transactionPrice denotes the per-share price at which the trade was executed, and transactionDate marks when the transaction occurred. The name field identifies the insider making the trade, and transactionCode (e.g., S for sale) clarifies the nature of the transaction. FilingDate records when the transaction was officially reported, and the unique id links to the specific SEC filing, as indicated by the source. Additionally, the symbol ties the transaction to a particular company, isDerivative flags whether the trade involves derivative securities, and currency notes the currency context of the transaction."
+        + "The insider transaction data shows the buying and selling activities of company insiders."
     )
 
 
@@ -285,7 +284,7 @@ def get_simfin_income_statements(
 def get_google_news(
     query: Annotated[str, "Query to search with"],
     curr_date: Annotated[str, "Curr date in yyyy-mm-dd format"],
-    look_back_days: Annotated[int, "how many days to look back"],
+    look_back_days: Annotated[int, "how many days to look back"] = 30,
 ) -> str:
     query = query.replace(" ", "+")
 
@@ -310,14 +309,15 @@ def get_google_news(
 
 def get_reddit_global_news(
     start_date: Annotated[str, "Start date in yyyy-mm-dd format"],
-    look_back_days: Annotated[int, "how many days to look back"],
-    max_limit_per_day: Annotated[int, "Maximum number of news per day"],
+    look_back_days: Annotated[int, "how many days to look back"] = 30,
+    max_limit_per_day: Annotated[int, "Maximum number of news per day"] = 20,
 ) -> str:
     """
     Retrieve the latest top reddit news
     Args:
         start_date: Start date in yyyy-mm-dd format
-        end_date: End date in yyyy-mm-dd format
+        look_back_days: How many days to look back, default is 30
+        max_limit_per_day: Maximum number of news per day
     Returns:
         str: A formatted dataframe containing the latest news articles posts on reddit and meta information in these columns: "created_utc", "id", "title", "selftext", "score", "num_comments", "url"
     """
@@ -363,15 +363,16 @@ def get_reddit_global_news(
 def get_reddit_company_news(
     ticker: Annotated[str, "ticker symbol of the company"],
     start_date: Annotated[str, "Start date in yyyy-mm-dd format"],
-    look_back_days: Annotated[int, "how many days to look back"],
-    max_limit_per_day: Annotated[int, "Maximum number of news per day"],
+    look_back_days: Annotated[int, "how many days to look back"] = 30,
+    max_limit_per_day: Annotated[int, "Maximum number of news per day"] = 20,
 ) -> str:
     """
     Retrieve the latest top reddit news
     Args:
         ticker: ticker symbol of the company
         start_date: Start date in yyyy-mm-dd format
-        end_date: End date in yyyy-mm-dd format
+        look_back_days: How many days to look back, default is 30
+        max_limit_per_day: Maximum number of news per day
     Returns:
         str: A formatted dataframe containing the latest news articles posts on reddit and meta information in these columns: "created_utc", "id", "title", "selftext", "score", "num_comments", "url"
     """
@@ -385,10 +386,7 @@ def get_reddit_company_news(
     curr_date = datetime.strptime(before, "%Y-%m-%d")
 
     total_iterations = (start_date - curr_date).days + 1
-    pbar = tqdm(
-        desc=f"Getting Company News for {ticker} on {start_date}",
-        total=total_iterations,
-    )
+    pbar = tqdm(desc=f"Getting Company News on {start_date}", total=total_iterations)
 
     while curr_date <= start_date:
         curr_date_str = curr_date.strftime("%Y-%m-%d")
@@ -396,12 +394,11 @@ def get_reddit_company_news(
             "company_news",
             curr_date_str,
             max_limit_per_day,
-            ticker,
+            query=ticker,
             data_path=os.path.join(DATA_DIR, "reddit_data"),
         )
         posts.extend(fetch_result)
         curr_date += relativedelta(days=1)
-
         pbar.update(1)
 
     pbar.close()
@@ -416,7 +413,7 @@ def get_reddit_company_news(
         else:
             news_str += f"### {post['title']}\n\n{post['content']}\n\n"
 
-    return f"##{ticker} News Reddit, from {before} to {curr_date}:\n\n{news_str}"
+    return f"## {ticker} Company News Reddit, from {before} to {curr_date}:\n{news_str}"
 
 
 def get_stock_stats_indicators_window(
@@ -425,8 +422,8 @@ def get_stock_stats_indicators_window(
     curr_date: Annotated[
         str, "The current trading date you are trading on, YYYY-mm-dd"
     ],
-    look_back_days: Annotated[int, "how many days to look back"],
-    online: Annotated[bool, "to fetch data online or offline"],
+    look_back_days: Annotated[int, "how many days to look back"] = 30,
+    online: Annotated[bool, "to fetch data online or offline"] = False,
 ) -> str:
 
     best_ind_params = {
@@ -516,7 +513,7 @@ def get_stock_stats_indicators_window(
         data = pd.read_csv(
             os.path.join(
                 DATA_DIR,
-                f"market_data/price_data/{symbol}-YFin-data-2015-01-01-2025-03-25.csv",
+                f"market_data/price_data/{symbol}-YFin-data-2010-07-26-2025-07-22.csv",
             )
         )
         data["Date"] = pd.to_datetime(data["Date"], utc=True)
@@ -587,7 +584,7 @@ def get_stockstats_indicator(
 def get_YFin_data_window(
     symbol: Annotated[str, "ticker symbol of the company"],
     curr_date: Annotated[str, "Start date in yyyy-mm-dd format"],
-    look_back_days: Annotated[int, "how many days to look back"],
+    look_back_days: Annotated[int, "how many days to look back"] = 30,
 ) -> str:
     # calculate past days
     date_obj = datetime.strptime(curr_date, "%Y-%m-%d")
@@ -676,11 +673,11 @@ def get_YFin_data(
     data = pd.read_csv(
         os.path.join(
             DATA_DIR,
-            f"market_data/price_data/{symbol}-YFin-data-2015-01-01-2025-03-25.csv",
+            f"market_data/price_data/{symbol}-YFin-data-2010-07-28-2025-07-24.csv",
         )
     )
 
-    if end_date > "2025-03-25":
+    if end_date > "2025-07-29":
         raise Exception(
             f"Get_YFin_Data: {end_date} is outside of the data range of 2015-01-01 to 2025-03-25"
         )
@@ -704,8 +701,9 @@ def get_YFin_data(
 
 def get_stock_news_openai(ticker, curr_date):
     config = get_config()
-    client = OpenAI(base_url=config["backend_url"])
-
+    base_url = "https://api.openai.com/v1"
+    # client = OpenAI(base_url=config["backend_url"])
+    client = OpenAI(base_url=base_url)
     response = client.responses.create(
         model=config["quick_think_llm"],
         input=[
@@ -714,7 +712,7 @@ def get_stock_news_openai(ticker, curr_date):
                 "content": [
                     {
                         "type": "input_text",
-                        "text": f"Can you search Social Media for {ticker} from 7 days before {curr_date} to {curr_date}? Make sure you only get the data posted during that period.",
+                        "text": f"Can you search Social Media for {ticker} from 30 days before {curr_date} to {curr_date}? Make sure you only get the data posted during that period.",
                     }
                 ],
             }

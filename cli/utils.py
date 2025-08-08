@@ -95,9 +95,9 @@ def select_research_depth() -> int:
 
     # Define research depth options with their corresponding values
     DEPTH_OPTIONS = [
-        ("Shallow - Quick research, few debate and strategy discussion rounds", 1),
-        ("Medium - Middle ground, moderate debate rounds and strategy discussion", 3),
-        ("Deep - Comprehensive research, in depth debate and strategy discussion", 5),
+        ("Shallow - Quick research, few debate and strategy discussion rounds", 3),
+        ("Medium - Middle ground, moderate debate rounds and strategy discussion", 5),
+        ("Deep - Comprehensive research, in depth debate and strategy discussion", 7),
     ]
 
     choice = questionary.select(
@@ -151,7 +151,9 @@ def select_shallow_thinking_agent(provider) -> str:
         ],
         "ollama": [
             ("llama3.1 local", "llama3.1"),
-            ("llama3.2 local", "llama3.2"),
+            ("llama3.2 local", "llama3.2:3b"),
+            ("qwen3", "qwen3:8b"),
+            ("gpt-oss-20b", "gpt-oss:20b")
         ]
     }
 
@@ -213,7 +215,8 @@ def select_deep_thinking_agent(provider) -> str:
         ],
         "ollama": [
             ("llama3.1 local", "llama3.1"),
-            ("qwen3", "qwen3"),
+            ("qwen3", "qwen3:235b"),
+            ("gpt-oss", "gpt-oss:120b")
         ]
     }
     
@@ -247,7 +250,7 @@ def select_llm_provider() -> tuple[str, str]:
         ("Anthropic", "https://api.anthropic.com/"),
         ("Google", "https://generativelanguage.googleapis.com/v1"),
         ("Openrouter", "https://openrouter.ai/api/v1"),
-        ("Ollama", "http://localhost:11434/v1"),        
+        ("Ollama", "http://10.1.203.33:11434/v1"),        
     ]
     
     choice = questionary.select(

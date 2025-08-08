@@ -1,6 +1,7 @@
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 import time
 import json
+from datetime import datetime, timedelta
 
 
 def create_market_analyst(llm, toolkit):
@@ -9,6 +10,11 @@ def create_market_analyst(llm, toolkit):
         current_date = state["trade_date"]
         ticker = state["company_of_interest"]
         company_name = state["company_of_interest"]
+
+        # Calculate date range for analysis (1 year back from current date)
+        current_date_obj = datetime.strptime(current_date, "%Y-%m-%d")
+        start_date = (current_date_obj - timedelta(days=365)).strftime("%Y-%m-%d")
+        end_date = current_date
 
         if toolkit.config["online_tools"]:
             tools = [
@@ -61,7 +67,8 @@ Volume-Based Indicators:
                     " If you or any other assistant has the FINAL TRANSACTION PROPOSAL: **BUY/HOLD/SELL** or deliverable,"
                     " prefix your response with FINAL TRANSACTION PROPOSAL: **BUY/HOLD/SELL** so the team knows to stop."
                     " You have access to the following tools: {tool_names}.\n{system_message}"
-                    "For your reference, the current date is {current_date}. The company we want to look at is {ticker}",
+                    "For your reference, the current date is {current_date}. The company we want to look at is {ticker}. "
+                    "For data analysis, use start_date: {start_date} and end_date: {end_date} to get historical data.",
                 ),
                 MessagesPlaceholder(variable_name="messages"),
             ]
@@ -71,10 +78,12 @@ Volume-Based Indicators:
         prompt = prompt.partial(tool_names=", ".join([tool.name for tool in tools]))
         prompt = prompt.partial(current_date=current_date)
         prompt = prompt.partial(ticker=ticker)
+        prompt = prompt.partial(start_date=start_date)
+        prompt = prompt.partial(end_date=end_date)
 
         chain = prompt | llm.bind_tools(tools)
 
-        result = chain.invoke(state["messages"])
+        result = chain.invoke({"messages": state["messages"]})
 
         report = ""
 

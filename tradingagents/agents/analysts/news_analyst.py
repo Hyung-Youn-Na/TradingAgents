@@ -13,7 +13,7 @@ def create_news_analyst(llm, toolkit):
         else:
             tools = [
                 toolkit.get_finnhub_news,
-                toolkit.get_reddit_news,
+                # toolkit.get_reddit_news,
                 toolkit.get_google_news,
             ]
 
@@ -45,7 +45,7 @@ def create_news_analyst(llm, toolkit):
         prompt = prompt.partial(ticker=ticker)
 
         chain = prompt | llm.bind_tools(tools)
-        result = chain.invoke(state["messages"])
+        result = chain.invoke({"messages": state["messages"]})
 
         report = ""
 

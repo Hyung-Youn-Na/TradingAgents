@@ -52,18 +52,22 @@ class Toolkit:
     @tool
     def get_reddit_news(
         curr_date: Annotated[str, "Date you want to get news for in yyyy-mm-dd format"],
+        look_back_days: Annotated[int, "how many days to look back"] = 30,
     ) -> str:
         """
-        Retrieve global news from Reddit within a specified time frame.
+        Retrieve the latest top reddit news
         Args:
-            curr_date (str): Date you want to get news for in yyyy-mm-dd format
+            curr_date: Date you want to get news for in yyyy-mm-dd format
+            look_back_days: How many days to look back, default is 30
         Returns:
-            str: A formatted dataframe containing the latest global news from Reddit in the specified time frame.
+            str: A formatted dataframe containing the latest news articles posts on reddit and meta information in these columns: "created_utc", "id", "title", "selftext", "score", "num_comments", "url"
         """
-        
-        global_news_result = interface.get_reddit_global_news(curr_date, 7, 5)
 
-        return global_news_result
+        result_news = interface.get_reddit_global_news(
+            curr_date, look_back_days, 10
+        )
+
+        return result_news
 
     @staticmethod
     @tool
@@ -105,19 +109,23 @@ class Toolkit:
             "Ticker of a company. e.g. AAPL, TSM",
         ],
         curr_date: Annotated[str, "Current date you want to get news for"],
+        look_back_days: Annotated[int, "how many days to look back"] = 30,
     ) -> str:
         """
-        Retrieve the latest news about a given stock from Reddit, given the current date.
+        Retrieve the latest top reddit news for a specific company
         Args:
-            ticker (str): Ticker of a company. e.g. AAPL, TSM
-            curr_date (str): current date in yyyy-mm-dd format to get news for
+            ticker: Ticker of a company. e.g. AAPL, TSM
+            curr_date: Current date you want to get news for
+            look_back_days: How many days to look back, default is 30
         Returns:
-            str: A formatted dataframe containing the latest news about the company on the given date
+            str: A formatted dataframe containing the latest news articles posts on reddit and meta information in these columns: "created_utc", "id", "title", "selftext", "score", "num_comments", "url"
         """
 
-        stock_news_results = interface.get_reddit_company_news(ticker, curr_date, 7, 5)
+        result_news = interface.get_reddit_company_news(
+            ticker, curr_date, look_back_days, 100
+        )
 
-        return stock_news_results
+        return result_news
 
     @staticmethod
     @tool
@@ -214,7 +222,7 @@ class Toolkit:
         """
 
         result_stockstats = interface.get_stock_stats_indicators_window(
-            symbol, indicator, curr_date, look_back_days, True
+            symbol, indicator, curr_date, look_back_days, False
         )
 
         return result_stockstats
@@ -227,21 +235,40 @@ class Toolkit:
             str,
             "current date of you are trading at, yyyy-mm-dd",
         ],
+        look_back_days: Annotated[int, "number of days to look back"] = 30,
     ):
         """
-        Retrieve insider sentiment information about a company (retrieved from public SEC information) for the past 30 days
+        Retrieve insider sentiment about a company (retrieved from public SEC information) for the past 30 days
         Args:
             ticker (str): ticker symbol of the company
-            curr_date (str): current date you are trading at, yyyy-mm-dd
+            curr_date (str): current date you are trading on, yyyy-mm-dd
         Returns:
             str: a report of the sentiment in the past 30 days starting at curr_date
         """
 
-        data_sentiment = interface.get_finnhub_company_insider_sentiment(
-            ticker, curr_date, 30
+        date_obj = datetime.strptime(curr_date, "%Y-%m-%d")
+        before = date_obj - relativedelta(days=look_back_days)
+        before = before.strftime("%Y-%m-%d")
+
+        data = interface.get_finnhub_company_insider_sentiment(ticker, before, look_back_days)
+
+        if len(data) == 0:
+            return ""
+
+        result_str = ""
+        seen_dicts = []
+        for date, senti_list in data.items():
+            for entry in senti_list:
+                if entry not in seen_dicts:
+                    result_str += f"### {entry['year']}-{entry['month']}:\nChange: {entry['change']}\nMonthly Share Purchase Ratio: {entry['mspr']}\n\n"
+                    seen_dicts.append(entry)
+
+        return (
+            f"## {ticker} Insider Sentiment Data for {before} to {curr_date}:\n"
+            + result_str
+            + "The change field refers to the net buying/selling from all insiders' transactions. The mspr field refers to monthly share purchase ratio."
         )
 
-        return data_sentiment
 
     @staticmethod
     @tool
@@ -251,21 +278,39 @@ class Toolkit:
             str,
             "current date you are trading at, yyyy-mm-dd",
         ],
+        look_back_days: Annotated[int, "how many days to look back"] = 30,
     ):
         """
-        Retrieve insider transaction information about a company (retrieved from public SEC information) for the past 30 days
+        Retrieve insider transcaction information about a company (retrieved from public SEC information) for the past 30 days
         Args:
             ticker (str): ticker symbol of the company
             curr_date (str): current date you are trading at, yyyy-mm-dd
         Returns:
-            str: a report of the company's insider transactions/trading information in the past 30 days
+            str: a report of the company's insider transaction/trading informtaion in the past 30 days
         """
 
-        data_trans = interface.get_finnhub_company_insider_transactions(
-            ticker, curr_date, 30
-        )
+        date_obj = datetime.strptime(curr_date, "%Y-%m-%d")
+        before = date_obj - relativedelta(days=look_back_days)
+        before = before.strftime("%Y-%m-%d")
 
-        return data_trans
+        data = interface.get_finnhub_company_insider_transactions(ticker, before, look_back_days)
+
+        if len(data) == 0:
+            return ""
+
+        result_str = ""
+        seen_dicts = []
+        for date, trans_list in data.items():
+            for entry in trans_list:
+                if entry not in seen_dicts:
+                    result_str += f"### {entry['filingDate']}:\nInsider: {entry['name']}\nTitle: {entry['title']}\nTransaction Type: {entry['transactionType']}\nShares: {entry['shares']}\nValue: {entry['value']}\n\n"
+                    seen_dicts.append(entry)
+
+        return (
+            f"## {ticker} Insider Transaction Data for {before} to {curr_date}:\n"
+            + result_str
+            + "The insider transaction data shows the buying and selling activities of company insiders."
+        )
 
     @staticmethod
     @tool
@@ -346,20 +391,21 @@ class Toolkit:
     def get_google_news(
         query: Annotated[str, "Query to search with"],
         curr_date: Annotated[str, "Curr date in yyyy-mm-dd format"],
+        look_back_days: Annotated[int, "how many days to look back"] = 30,
     ):
         """
-        Retrieve the latest news from Google News based on a query and date range.
+        Retrieve Google News for a given query and date range.
         Args:
             query (str): Query to search with
             curr_date (str): Current date in yyyy-mm-dd format
-            look_back_days (int): How many days to look back
+            look_back_days (int): How many days to look back, default is 30
         Returns:
-            str: A formatted string containing the latest news from Google News based on the query and date range.
+            str: A formatted string containing Google News results
         """
 
-        google_news_results = interface.get_google_news(query, curr_date, 7)
+        result_news = interface.get_google_news(query, curr_date, look_back_days)
 
-        return google_news_results
+        return result_news
 
     @staticmethod
     @tool
