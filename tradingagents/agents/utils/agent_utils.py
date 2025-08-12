@@ -463,3 +463,63 @@ class Toolkit:
         )
 
         return openai_fundamentals_results
+
+    @staticmethod
+    @tool
+    def get_sec_edgar_10k_analysis(
+        ticker: Annotated[str, "ticker symbol for the company"],
+        curr_date: Annotated[str, "current date in yyyy-mm-dd format"],
+        look_back_days: Annotated[int, "how many days to look back"] = 365,
+    ) -> str:
+        """
+        Analyze the latest 10-K annual report for a company.
+        
+        Args:
+            ticker: Company ticker symbol (e.g., 'AAPL')
+            curr_date: Current date in yyyy-mm-dd format
+            look_back_days: Number of days to look back for filings
+        
+        Returns:
+            Analysis of the 10-K filing including financial statements and management discussion
+        """
+        return interface.get_sec_edgar_10k_analysis(ticker, curr_date, look_back_days)
+
+    @staticmethod
+    @tool
+    def get_sec_edgar_10q_analysis(
+        ticker: Annotated[str, "ticker symbol for the company"],
+        curr_date: Annotated[str, "current date in yyyy-mm-dd format"],
+        look_back_days: Annotated[int, "how many days to look back"] = 365,
+    ) -> str:
+        """
+        Analyze the latest 10-Q quarterly report for a company.
+        
+        Args:
+            ticker: Company ticker symbol (e.g., 'AAPL')
+            curr_date: Current date in yyyy-mm-dd format
+            look_back_days: Number of days to look back for filings
+        
+        Returns:
+            Analysis of the 10-Q filing including quarterly financial results
+        """
+        return interface.get_sec_edgar_10q_analysis(ticker, curr_date, look_back_days)
+
+    @staticmethod
+    @tool
+    def get_sec_edgar_8k_analysis(
+        ticker: Annotated[str, "ticker symbol for the company"],
+        curr_date: Annotated[str, "current date in yyyy-mm-dd format"],
+        look_back_days: Annotated[int, "how many days to look back"] = 365,
+    ) -> str:
+        """
+        Analyze the latest 8-K current report for a company.
+        
+        Args:
+            ticker: Company ticker symbol (e.g., 'AAPL')
+            curr_date: Current date in yyyy-mm-dd format
+            look_back_days: Number of days to look back for filings
+        
+        Returns:
+            Analysis of the 8-K filing including material events and their implications
+        """
+        return interface.get_sec_edgar_8k_analysis(ticker, curr_date, look_back_days)

@@ -43,6 +43,14 @@ class ConditionalLogic:
             return "tools_fundamentals"
         return "Msg Clear Fundamentals"
 
+    def should_continue_sec_edgar(self, state: AgentState) -> str:
+        """Determine if Sec edgar analysis should continue."""
+        messages = state["messages"]
+        last_message = messages[-1]
+        if last_message.tool_calls:
+            return "tools_sec_edgar"
+        return "Msg Clear Sec_edgar"    
+    
     def should_continue_debate(self, state: AgentState) -> str:
         """Determine if debate should continue."""
 
@@ -65,3 +73,5 @@ class ConditionalLogic:
         if state["risk_debate_state"]["latest_speaker"].startswith("Safe"):
             return "Neutral Analyst"
         return "Risky Analyst"
+
+

@@ -47,6 +47,7 @@ class MessageBuffer:
             "Social Analyst": "pending",
             "News Analyst": "pending",
             "Fundamentals Analyst": "pending",
+            "SEC EDGAR Analyst": "pending",
             # Research Team
             "Bull Researcher": "pending",
             "Bear Researcher": "pending",
@@ -66,6 +67,7 @@ class MessageBuffer:
             "sentiment_report": None,
             "news_report": None,
             "fundamentals_report": None,
+            "sec_edgar_report": None,
             "investment_plan": None,
             "trader_investment_plan": None,
             "final_trade_decision": None,
@@ -107,6 +109,7 @@ class MessageBuffer:
                 "sentiment_report": "Social Sentiment",
                 "news_report": "News Analysis",
                 "fundamentals_report": "Fundamentals Analysis",
+                "sec_edgar_report": "SEC EDGAR Analysis",
                 "investment_plan": "Research Team Decision",
                 "trader_investment_plan": "Trading Team Plan",
                 "final_trade_decision": "Portfolio Management Decision",
@@ -129,6 +132,7 @@ class MessageBuffer:
                 "sentiment_report",
                 "news_report",
                 "fundamentals_report",
+                "sec_edgar_report",
             ]
         ):
             report_parts.append("## Analyst Team Reports")
@@ -147,6 +151,10 @@ class MessageBuffer:
             if self.report_sections["fundamentals_report"]:
                 report_parts.append(
                     f"### Fundamentals Analysis\n{self.report_sections['fundamentals_report']}"
+                )
+            if self.report_sections["sec_edgar_report"]:
+                report_parts.append(
+                    f"### SEC EDGAR Analysis\n{self.report_sections['sec_edgar_report']}"
                 )
 
         # Research Team Reports
@@ -220,6 +228,7 @@ def update_display(layout, spinner_text=None):
             "Social Analyst",
             "News Analyst",
             "Fundamentals Analyst",
+            "SEC EDGAR Analyst",
         ],
         "Research Team": ["Bull Researcher", "Bear Researcher", "Research Manager"],
         "Trading Team": ["Trader"],
@@ -567,6 +576,17 @@ def display_complete_report(final_state):
             )
         )
 
+    # SEC EDGAR Analyst Report
+    if final_state.get("sec_edgar_report"):
+        analyst_reports.append(
+            Panel(
+                Markdown(final_state["sec_edgar_report"]),
+                title="SEC EDGAR Analyst",
+                border_style="blue",
+                padding=(1, 2),
+            )
+        )
+
     if analyst_reports:
         console.print(
             Panel(
@@ -799,7 +819,7 @@ def run_analysis():
     # Now start the display layout
     layout = create_layout()
 
-    with Live(layout, refresh_per_second=4) as live:
+    with Live(layout, refresh_per_second=3) as live:
         # Initial display
         update_display(layout)
 
@@ -844,6 +864,7 @@ def run_analysis():
         # Stream the analysis
         trace = []
         for chunk in graph.graph.stream(init_agent_state, **args):
+            print(chunk)
             if len(chunk["messages"]) > 0:
                 # Get the last message from the chunk
                 last_message = chunk["messages"][-1]
@@ -911,6 +932,19 @@ def run_analysis():
                     )
                     message_buffer.update_agent_status(
                         "Fundamentals Analyst", "completed"
+                    )
+                    # Set next analyst to in_progress
+                    if "sec_edgar" in selections["analysts"]:
+                        message_buffer.update_agent_status(
+                            "SEC EDGAR Analyst", "in_progress"
+                        )
+
+                if "sec_edgar_report" in chunk and chunk["sec_edgar_report"]:
+                    message_buffer.update_report_section(
+                        "sec_edgar_report", chunk["sec_edgar_report"]
+                    )
+                    message_buffer.update_agent_status(
+                        "SEC EDGAR Analyst", "completed"
                     )
                     # Set all research team members to in_progress
                     update_research_team_status("in_progress")

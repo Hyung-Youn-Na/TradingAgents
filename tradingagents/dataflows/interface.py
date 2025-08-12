@@ -14,6 +14,7 @@ from tqdm import tqdm
 import yfinance as yf
 from openai import OpenAI
 from .config import get_config, set_config, DATA_DIR
+from .sec_edgar_utils import SECEdgarUtils
 
 
 def get_finnhub_news(
@@ -513,7 +514,7 @@ def get_stock_stats_indicators_window(
         data = pd.read_csv(
             os.path.join(
                 DATA_DIR,
-                f"market_data/price_data/{symbol}-YFin-data-2010-07-26-2025-07-22.csv",
+                f"market_data/price_data/{symbol}-YFin-data-2010-07-28-2025-07-24.csv",
             )
         )
         data["Date"] = pd.to_datetime(data["Date"], utc=True)
@@ -677,9 +678,9 @@ def get_YFin_data(
         )
     )
 
-    if end_date > "2025-07-29":
+    if end_date > "2025-08-12":
         raise Exception(
-            f"Get_YFin_Data: {end_date} is outside of the data range of 2015-01-01 to 2025-03-25"
+            f"Get_YFin_Data: {end_date} is outside of the data range of 2015-01-01 to 2025-08-12"
         )
 
     # Extract just the date part for comparison
@@ -705,7 +706,8 @@ def get_stock_news_openai(ticker, curr_date):
     # client = OpenAI(base_url=config["backend_url"])
     client = OpenAI(base_url=base_url)
     response = client.responses.create(
-        model=config["quick_think_llm"],
+        # model=config["quick_think_llm"],
+        model="gpt-5-nano",
         input=[
             {
                 "role": "system",
@@ -803,3 +805,278 @@ def get_fundamentals_openai(ticker, curr_date):
     )
 
     return response.output[1].content[0].text
+
+
+def get_sec_edgar_10k_analysis(
+    ticker: Annotated[str, "ticker symbol for the company"],
+    curr_date: Annotated[str, "current date in yyyy-mm-dd format"],
+    look_back_days: Annotated[int, "how many days to look back"] = 365,
+) -> str:
+    """
+    Analyze the latest 10-K annual report for a company.
+    
+    Args:
+        ticker: Company ticker symbol (e.g., 'AAPL')
+        curr_date: Current date in yyyy-mm-dd format
+        look_back_days: Number of days to look back for filings
+    
+    Returns:
+        Comprehensive analysis of the 10-K filing including financial statements and management discussion
+    """
+    try:
+        # Calculate end date for filing search
+        end_date = datetime.strptime(curr_date, "%Y-%m-%d")
+        end_date_str = end_date.strftime("%Y-%m-%d")
+        
+        # Initialize SEC EDGAR utils
+        sec_utils = SECEdgarUtils(email="your.email@example.com")  # Should be configured
+        
+        # Get latest 10-K data
+        tenk_data = sec_utils.get_latest_10k(ticker, end_date_str)
+        
+        analysis = f"""
+# 10-K Annual Report Analysis for {ticker}
+
+## Company Information
+- **Company Name**: {tenk_data['company_name']}
+- **CIK**: {tenk_data['cik']}
+- **Filing Date**: {tenk_data['filing_date']}
+- **Report Period**: {tenk_data['period_of_report']}
+
+## Financial Statements
+
+### Balance Sheet
+{tenk_data['balance_sheet']}
+
+### Income Statement
+{tenk_data['income_statement']}
+
+### Cash Flow Statement
+{tenk_data['cash_flow']}
+
+## Management Discussion & Analysis
+{tenk_data['management_discussion']}
+
+## Risk Factors
+{tenk_data['risk_factors']}
+
+## Key Insights
+This 10-K filing provides comprehensive information about the company's financial performance, business operations, and risk factors. The management discussion offers insights into strategic decisions and future outlook.
+        """
+        
+        return analysis
+        
+    except Exception as e:
+        return f"Error analyzing 10-K for {ticker}: {str(e)}"
+
+
+def get_sec_edgar_10q_analysis(
+    ticker: Annotated[str, "ticker symbol for the company"],
+    curr_date: Annotated[str, "current date in yyyy-mm-dd format"],
+    look_back_days: Annotated[int, "how many days to look back"] = 365,
+) -> str:
+    """
+    Analyze the latest 10-Q quarterly report for a company.
+    
+    Args:
+        ticker: Company ticker symbol (e.g., 'AAPL')
+        curr_date: Current date in yyyy-mm-dd format
+        look_back_days: Number of days to look back for filings
+    
+    Returns:
+        Comprehensive analysis of the 10-Q filing including quarterly performance and business updates
+    """
+    try:
+        # Calculate end date for filing search
+        end_date = datetime.strptime(curr_date, "%Y-%m-%d")
+        end_date_str = end_date.strftime("%Y-%m-%d")
+        
+        # Initialize SEC EDGAR utils
+        sec_utils = SECEdgarUtils(email="your.email@example.com")  # Should be configured
+        
+        # Get latest 10-Q data
+        tenq_data = sec_utils.get_latest_10q(ticker, end_date_str)
+        
+        analysis = f"""
+# 10-Q Quarterly Report Analysis for {ticker}
+
+## Company Information
+- **Company Name**: {tenq_data['company_name']}
+- **CIK**: {tenq_data['cik']}
+- **Filing Date**: {tenq_data['filing_date']}
+- **Report Period**: {tenq_data['period_of_report']}
+
+## Part I - Financial Information
+
+### ITEM 1: Financial Statements
+{tenq_data['part1_item1']}
+
+### ITEM 2: Management's Discussion and Analysis
+{tenq_data['part1_item2']}
+
+### ITEM 3: Quantitative and Qualitative Disclosures About Market Risk
+{tenq_data['part1_item3']}
+
+### ITEM 4: Controls and Procedures
+{tenq_data['part1_item4']}
+
+### ITEM 5: Other Information
+{tenq_data['part1_item5']}
+
+### ITEM 6: Exhibits
+{tenq_data['part1_item6']}
+
+## Part II - Other Information
+
+### ITEM 1: Legal Proceedings
+{tenq_data['part2_item1']}
+
+### ITEM 1A: Risk Factors
+{tenq_data['part2_item1a']}
+
+### ITEM 2: Unregistered Sales of Equity Securities
+{tenq_data['part2_item2']}
+
+### ITEM 3: Defaults Upon Senior Securities
+{tenq_data['part2_item3']}
+
+### ITEM 4: Mine Safety Disclosures
+{tenq_data['part2_item4']}
+
+### ITEM 5: Other Information
+{tenq_data['part2_item5']}
+
+### ITEM 6: Exhibits
+{tenq_data['part2_item6']}
+
+## Key Insights
+This 10-Q filing provides quarterly updates on the company's financial performance and business developments. The management discussion offers insights into recent trends and future outlook.
+        """
+        
+        return analysis
+        
+    except Exception as e:
+        return f"Error analyzing 10-Q for {ticker}: {str(e)}"
+
+
+def get_sec_edgar_8k_analysis(
+    ticker: Annotated[str, "ticker symbol for the company"],
+    curr_date: Annotated[str, "current date in yyyy-mm-dd format"],
+    look_back_days: Annotated[int, "how many days to look back"] = 365,
+) -> str:
+    """
+    Analyze the latest 8-K current report for a company.
+    
+    Args:
+        ticker: Company ticker symbol (e.g., 'AAPL')
+        curr_date: Current date in yyyy-mm-dd format
+        look_back_days: Number of days to look back for filings
+    
+    Returns:
+        Analysis of the 8-K filing including material events and their implications
+    """
+    try:
+        # Calculate end date for filing search
+        end_date = datetime.strptime(curr_date, "%Y-%m-%d")
+        end_date_str = end_date.strftime("%Y-%m-%d")
+        
+        # Initialize SEC EDGAR utils
+        sec_utils = SECEdgarUtils(email="your.email@example.com")  # Should be configured
+        
+        # Get latest 8-K data
+        eightk_data = sec_utils.get_latest_8k(ticker, end_date_str)
+        
+        analysis = f"""
+# 8-K Current Report Analysis for {ticker}
+
+## Company Information
+- **Company Name**: {eightk_data['company_name']}
+- **CIK**: {eightk_data['cik']}
+- **Filing Date**: {eightk_data['filing_date']}
+- **Report Period**: {eightk_data['period_of_report']}
+
+## Material Events and Disclosures
+
+{eightk_data['text']}
+
+## Key Insights
+This 8-K filing reports material events that could significantly impact the company's stock price or business operations. Key areas to monitor include:
+- Earnings releases and financial results
+- Corporate actions (mergers, acquisitions, divestitures)
+- Leadership changes and executive appointments
+- Regulatory compliance issues
+- Material contracts and agreements
+- Bankruptcy or receivership proceedings
+        """
+        
+        return analysis
+        
+    except Exception as e:
+        return f"Error analyzing 8-K for {ticker}: {str(e)}"
+
+
+def get_sec_edgar_filing_summary(
+    ticker: Annotated[str, "ticker symbol for the company"],
+    curr_date: Annotated[str, "current date in yyyy-mm-dd format"],
+    filing_type: Annotated[str, "type of filings to include (all, 10-K, 10-Q, 8-K)"] = "all",
+    look_back_days: Annotated[int, "how many days to look back"] = 365,
+    limit: Annotated[int, "maximum number of filings to return"] = 10,
+) -> str:
+    """
+    Get a summary of recent SEC filings for a company.
+    
+    Args:
+        ticker: Company ticker symbol (e.g., 'AAPL')
+        curr_date: Current date in yyyy-mm-dd format
+        filing_type: Type of filings to include
+        look_back_days: Number of days to look back
+        limit: Maximum number of filings to return
+    
+    Returns:
+        Summary of recent filings with key dates and descriptions
+    """
+    try:
+        # Calculate date range
+        end_date = datetime.strptime(curr_date, "%Y-%m-%d")
+        start_date = end_date - timedelta(days=look_back_days)
+        start_date_str = start_date.strftime("%Y-%m-%d")
+        end_date_str = end_date.strftime("%Y-%m-%d")
+        
+        # Initialize SEC EDGAR utils
+        sec_utils = SECEdgarUtils(email="your.email@example.com")  # Should be configured
+        
+        # Get filing summary
+        filing_summary = sec_utils.get_filing_summary(
+            ticker, 
+            filing_type, 
+            start_date_str, 
+            end_date_str, 
+            limit
+        )
+        
+        if filing_summary.empty:
+            return f"No {filing_type} filings found for {ticker} between {start_date_str} and {end_date_str}"
+        
+        summary = f"""
+# SEC Filing Summary for {ticker}
+
+## Filing Period: {start_date_str} to {end_date_str}
+## Filing Type: {filing_type.upper()}
+
+## Recent Filings
+
+"""
+        
+        for _, filing in filing_summary.iterrows():
+            summary += f"""
+### {filing['form']} - {filing['filing_date']}
+- **Period of Report**: {filing['period_of_report']}
+- **Accession Number**: {filing['accession_number']}
+- **Description**: {filing['description']}
+
+"""
+        
+        return summary
+        
+    except Exception as e:
+        return f"Error getting filing summary for {ticker}: {str(e)}"

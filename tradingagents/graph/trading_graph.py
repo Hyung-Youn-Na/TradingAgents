@@ -34,7 +34,7 @@ class TradingAgentsGraph:
 
     def __init__(
         self,
-        selected_analysts=["market", "social", "news", "fundamentals"],
+        selected_analysts=["market", "social", "news", "fundamentals", "sec_edgar"],
         debug=False,
         config: Dict[str, Any] = None,
     ):
@@ -108,6 +108,7 @@ class TradingAgentsGraph:
 
         # Set up the graph
         self.graph = self.graph_setup.setup_graph(selected_analysts)
+        self.graph.get_graph().draw_png(output_file_path="graph.png")
 
     def _create_tool_nodes(self) -> Dict[str, ToolNode]:
         """Create tool nodes for different data sources."""
@@ -150,6 +151,14 @@ class TradingAgentsGraph:
                     self.toolkit.get_simfin_balance_sheet,
                     self.toolkit.get_simfin_cashflow,
                     self.toolkit.get_simfin_income_stmt,
+                ]
+            ),
+            "sec_edgar": ToolNode(
+                [
+                    # SEC EDGAR tools
+                    self.toolkit.get_sec_edgar_10k_analysis,
+                    self.toolkit.get_sec_edgar_10q_analysis,
+                    self.toolkit.get_sec_edgar_8k_analysis,
                 ]
             ),
         }
@@ -198,6 +207,7 @@ class TradingAgentsGraph:
             "sentiment_report": final_state["sentiment_report"],
             "news_report": final_state["news_report"],
             "fundamentals_report": final_state["fundamentals_report"],
+            "sec_edgar_report": final_state["sec_edgar_report"],
             "investment_debate_state": {
                 "bull_history": final_state["investment_debate_state"]["bull_history"],
                 "bear_history": final_state["investment_debate_state"]["bear_history"],
