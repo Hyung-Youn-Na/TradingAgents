@@ -40,6 +40,10 @@ class Propagator:
             "sentiment_report": "",
             "news_report": "",
             "sec_edgar_report": "",
+            "sec_10k_report": "",
+            "sec_10q_report": "",
+            "sec_8k_report": "",
+            "sec_synthesis_report": "",
         }
 
     def get_graph_args(self) -> Dict[str, Any]:

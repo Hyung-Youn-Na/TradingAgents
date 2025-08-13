@@ -1,15 +1,17 @@
 import questionary
+from rich.console import Console
 from typing import List, Optional, Tuple, Dict
 
 from cli.models import AnalystType
 
 ANALYST_ORDER = [
-    ("Market Analyst", AnalystType.MARKET),
-    ("Social Media Analyst", AnalystType.SOCIAL),
-    ("News Analyst", AnalystType.NEWS),
-    ("Fundamentals Analyst", AnalystType.FUNDAMENTALS),
-    ("SEC EDGAR Analyst", AnalystType.SEC_EDGAR),
+    ("SEC 10-K Analyst", AnalystType.SEC_10K),
+    ("SEC 10-Q Analyst", AnalystType.SEC_10Q),
+    ("SEC 8-K Analyst", AnalystType.SEC_8K),
+    ("SEC Synthesis Analyst", AnalystType.SEC_SYNTHESIS),
 ]
+
+console = Console()
 
 
 def get_ticker() -> str:

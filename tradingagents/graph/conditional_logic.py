@@ -50,6 +50,30 @@ class ConditionalLogic:
         if last_message.tool_calls:
             return "tools_sec_edgar"
         return "Msg Clear Sec_edgar"    
+
+    def should_continue_sec_10k(self, state: AgentState) -> str:
+        messages = state["messages"]
+        last_message = messages[-1]
+        if last_message.tool_calls:
+            return "tools_sec_10k"
+        return "Msg Clear Sec_10k"
+
+    def should_continue_sec_10q(self, state: AgentState) -> str:
+        messages = state["messages"]
+        last_message = messages[-1]
+        if last_message.tool_calls:
+            return "tools_sec_10q"
+        return "Msg Clear Sec_10q"
+
+    def should_continue_sec_8k(self, state: AgentState) -> str:
+        messages = state["messages"]
+        last_message = messages[-1]
+        if last_message.tool_calls:
+            return "tools_sec_8k"
+        return "Msg Clear Sec_8k"
+
+    def should_continue_sec_synthesis(self, state: AgentState) -> str:
+        return "Msg Clear Sec_synthesis"
     
     def should_continue_debate(self, state: AgentState) -> str:
         """Determine if debate should continue."""

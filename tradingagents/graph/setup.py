@@ -41,7 +41,7 @@ class GraphSetup:
         self.conditional_logic = conditional_logic
 
     def setup_graph(
-        self, selected_analysts=["market", "social", "news", "fundamentals", "sec_edgar"]
+        self, selected_analysts=["sec_10k", "sec_10q", "sec_8k", "sec_synthesis"]
     ):
         """Set up and compile the agent workflow graph.
 
@@ -61,40 +61,33 @@ class GraphSetup:
         delete_nodes = {}
         tool_nodes = {}
 
-        if "market" in selected_analysts:
-            analyst_nodes["market"] = create_market_analyst(
+        if "sec_10k" in selected_analysts:
+            analyst_nodes["sec_10k"] = create_sec_10k_analyst(
                 self.quick_thinking_llm, self.toolkit
             )
-            delete_nodes["market"] = create_msg_delete()
-            tool_nodes["market"] = self.tool_nodes["market"]
+            delete_nodes["sec_10k"] = create_msg_delete()
+            tool_nodes["sec_10k"] = self.tool_nodes["sec_10k"]
 
-        if "social" in selected_analysts:
-            analyst_nodes["social"] = create_social_media_analyst(
+        if "sec_10q" in selected_analysts:
+            analyst_nodes["sec_10q"] = create_sec_10q_analyst(
                 self.quick_thinking_llm, self.toolkit
             )
-            delete_nodes["social"] = create_msg_delete()
-            tool_nodes["social"] = self.tool_nodes["social"]
+            delete_nodes["sec_10q"] = create_msg_delete()
+            tool_nodes["sec_10q"] = self.tool_nodes["sec_10q"]
 
-        if "news" in selected_analysts:
-            analyst_nodes["news"] = create_news_analyst(
+        if "sec_8k" in selected_analysts:
+            analyst_nodes["sec_8k"] = create_sec_8k_analyst(
                 self.quick_thinking_llm, self.toolkit
             )
-            delete_nodes["news"] = create_msg_delete()
-            tool_nodes["news"] = self.tool_nodes["news"]
+            delete_nodes["sec_8k"] = create_msg_delete()
+            tool_nodes["sec_8k"] = self.tool_nodes["sec_8k"]
 
-        if "fundamentals" in selected_analysts:
-            analyst_nodes["fundamentals"] = create_fundamentals_analyst(
-                self.quick_thinking_llm, self.toolkit
+        if "sec_synthesis" in selected_analysts:
+            analyst_nodes["sec_synthesis"] = create_sec_synthesis_analyst(
+                self.deep_thinking_llm
             )
-            delete_nodes["fundamentals"] = create_msg_delete()
-            tool_nodes["fundamentals"] = self.tool_nodes["fundamentals"]
-
-        if "sec_edgar" in selected_analysts:
-            analyst_nodes["sec_edgar"] = create_sec_edgar_analyst(
-                self.quick_thinking_llm, self.toolkit
-            )
-            delete_nodes["sec_edgar"] = create_msg_delete()
-            tool_nodes["sec_edgar"] = self.tool_nodes["sec_edgar"]
+            delete_nodes["sec_synthesis"] = create_msg_delete()
+            tool_nodes["sec_synthesis"] = self.tool_nodes["sec_synthesis"]
 
         # Create researcher and manager nodes
         bull_researcher_node = create_bull_researcher(
@@ -125,7 +118,8 @@ class GraphSetup:
             workflow.add_node(
                 f"Msg Clear {analyst_type.capitalize()}", delete_nodes[analyst_type]
             )
-            workflow.add_node(f"tools_{analyst_type}", tool_nodes[analyst_type])
+            if analyst_type != "sec_synthesis":
+                workflow.add_node(f"tools_{analyst_type}", tool_nodes[analyst_type])
 
         # Add other nodes
         workflow.add_node("Bull Researcher", bull_researcher_node)
@@ -150,13 +144,15 @@ class GraphSetup:
             current_clear = f"Msg Clear {analyst_type.capitalize()}"
 
             # Add conditional edges for current analyst
-            workflow.add_conditional_edges(
-                current_analyst,
-                getattr(self.conditional_logic, f"should_continue_{analyst_type}"),
-                [current_tools, current_clear],
-            )
-            workflow.add_edge(current_tools, current_analyst)
-            import pdb; pdb.set_trace()
+            if analyst_type != "sec_synthesis":
+                workflow.add_conditional_edges(
+                    current_analyst,
+                    getattr(self.conditional_logic, f"should_continue_{analyst_type}"),
+                    [current_tools, current_clear],
+                )
+                workflow.add_edge(current_tools, current_analyst)
+            else:
+                workflow.add_edge(current_analyst, current_clear)
             # Connect to next analyst or to Bull Researcher if this is the last analyst
             if i < len(selected_analysts) - 1:
                 next_analyst = f"{selected_analysts[i+1].capitalize()} Analyst"

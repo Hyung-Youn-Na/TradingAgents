@@ -61,6 +61,10 @@ class AgentState(MessagesState):
     ]
     fundamentals_report: Annotated[str, "Report from the Fundamentals Researcher"]
     sec_edgar_report: Annotated[str, "Report from the SEC EDGAR Researcher"]
+    sec_10k_report: Annotated[str, "Report from the SEC 10-K Analyst"]
+    sec_10q_report: Annotated[str, "Report from the SEC 10-Q Analyst"]
+    sec_8k_report: Annotated[str, "Report from the SEC 8-K Analyst"]
+    sec_synthesis_report: Annotated[str, "Integrated SEC synthesis report"]
 
     # researcher team discussion step
     investment_debate_state: Annotated[

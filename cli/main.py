@@ -42,12 +42,11 @@ class MessageBuffer:
         self.current_report = None
         self.final_report = None  # Store the complete final report
         self.agent_status = {
-            # Analyst Team
-            "Market Analyst": "pending",
-            "Social Analyst": "pending",
-            "News Analyst": "pending",
-            "Fundamentals Analyst": "pending",
-            "SEC EDGAR Analyst": "pending",
+            # Analyst Team (SEC-only)
+            "Sec_10k Analyst": "pending",
+            "Sec_10q Analyst": "pending",
+            "Sec_8k Analyst": "pending",
+            "Sec_synthesis Analyst": "pending",
             # Research Team
             "Bull Researcher": "pending",
             "Bear Researcher": "pending",
@@ -63,11 +62,10 @@ class MessageBuffer:
         }
         self.current_agent = None
         self.report_sections = {
-            "market_report": None,
-            "sentiment_report": None,
-            "news_report": None,
-            "fundamentals_report": None,
-            "sec_edgar_report": None,
+            "sec_10k_report": None,
+            "sec_10q_report": None,
+            "sec_8k_report": None,
+            "sec_synthesis_report": None,
             "investment_plan": None,
             "trader_investment_plan": None,
             "final_trade_decision": None,
@@ -105,11 +103,10 @@ class MessageBuffer:
         if latest_section and latest_content:
             # Format the current section for display
             section_titles = {
-                "market_report": "Market Analysis",
-                "sentiment_report": "Social Sentiment",
-                "news_report": "News Analysis",
-                "fundamentals_report": "Fundamentals Analysis",
-                "sec_edgar_report": "SEC EDGAR Analysis",
+                "sec_10k_report": "SEC 10-K Analysis",
+                "sec_10q_report": "SEC 10-Q Analysis",
+                "sec_8k_report": "SEC 8-K Analysis",
+                "sec_synthesis_report": "SEC Synthesis Analysis",
                 "investment_plan": "Research Team Decision",
                 "trader_investment_plan": "Trading Team Plan",
                 "final_trade_decision": "Portfolio Management Decision",
@@ -125,36 +122,28 @@ class MessageBuffer:
         report_parts = []
 
         # Analyst Team Reports
-        if any(
-            self.report_sections[section]
-            for section in [
-                "market_report",
-                "sentiment_report",
-                "news_report",
-                "fundamentals_report",
-                "sec_edgar_report",
-            ]
-        ):
+        if any(self.report_sections[section] for section in [
+            "sec_10k_report",
+            "sec_10q_report",
+            "sec_8k_report",
+            "sec_synthesis_report",
+        ]):
             report_parts.append("## Analyst Team Reports")
-            if self.report_sections["market_report"]:
+            if self.report_sections["sec_10k_report"]:
                 report_parts.append(
-                    f"### Market Analysis\n{self.report_sections['market_report']}"
+                    f"### SEC 10-K Analysis\n{self.report_sections['sec_10k_report']}"
                 )
-            if self.report_sections["sentiment_report"]:
+            if self.report_sections["sec_10q_report"]:
                 report_parts.append(
-                    f"### Social Sentiment\n{self.report_sections['sentiment_report']}"
+                    f"### SEC 10-Q Analysis\n{self.report_sections['sec_10q_report']}"
                 )
-            if self.report_sections["news_report"]:
+            if self.report_sections["sec_8k_report"]:
                 report_parts.append(
-                    f"### News Analysis\n{self.report_sections['news_report']}"
+                    f"### SEC 8-K Analysis\n{self.report_sections['sec_8k_report']}"
                 )
-            if self.report_sections["fundamentals_report"]:
+            if self.report_sections["sec_synthesis_report"]:
                 report_parts.append(
-                    f"### Fundamentals Analysis\n{self.report_sections['fundamentals_report']}"
-                )
-            if self.report_sections["sec_edgar_report"]:
-                report_parts.append(
-                    f"### SEC EDGAR Analysis\n{self.report_sections['sec_edgar_report']}"
+                    f"### SEC Synthesis Analysis\n{self.report_sections['sec_synthesis_report']}"
                 )
 
         # Research Team Reports
@@ -223,13 +212,12 @@ def update_display(layout, spinner_text=None):
 
     # Group agents by team
     teams = {
-        "Analyst Team": [
-            "Market Analyst",
-            "Social Analyst",
-            "News Analyst",
-            "Fundamentals Analyst",
-            "SEC EDGAR Analyst",
-        ],
+            "Analyst Team": [
+                "Sec_10k Analyst",
+                "Sec_10q Analyst",
+                "Sec_8k Analyst",
+                "Sec_synthesis Analyst",
+            ],
         "Research Team": ["Bull Researcher", "Bear Researcher", "Research Manager"],
         "Trading Team": ["Trader"],
         "Risk Management": ["Risky Analyst", "Neutral Analyst", "Safe Analyst"],
@@ -532,56 +520,45 @@ def display_complete_report(final_state):
     # I. Analyst Team Reports
     analyst_reports = []
 
-    # Market Analyst Report
-    if final_state.get("market_report"):
+    # SEC 10-K Analyst Report
+    if final_state.get("sec_10k_report"):
         analyst_reports.append(
             Panel(
-                Markdown(final_state["market_report"]),
-                title="Market Analyst",
+                Markdown(final_state["sec_10k_report"]),
+                title="SEC 10-K Analyst",
                 border_style="blue",
                 padding=(1, 2),
             )
         )
 
-    # Social Analyst Report
-    if final_state.get("sentiment_report"):
+    # SEC 10-Q Analyst Report
+    if final_state.get("sec_10q_report"):
         analyst_reports.append(
             Panel(
-                Markdown(final_state["sentiment_report"]),
-                title="Social Analyst",
+                Markdown(final_state["sec_10q_report"]),
+                title="SEC 10-Q Analyst",
                 border_style="blue",
                 padding=(1, 2),
             )
         )
 
-    # News Analyst Report
-    if final_state.get("news_report"):
+    # SEC 8-K Analyst Report
+    if final_state.get("sec_8k_report"):
         analyst_reports.append(
             Panel(
-                Markdown(final_state["news_report"]),
-                title="News Analyst",
+                Markdown(final_state["sec_8k_report"]),
+                title="SEC 8-K Analyst",
                 border_style="blue",
                 padding=(1, 2),
             )
         )
 
-    # Fundamentals Analyst Report
-    if final_state.get("fundamentals_report"):
+    # SEC Synthesis Analyst Report
+    if final_state.get("sec_synthesis_report"):
         analyst_reports.append(
             Panel(
-                Markdown(final_state["fundamentals_report"]),
-                title="Fundamentals Analyst",
-                border_style="blue",
-                padding=(1, 2),
-            )
-        )
-
-    # SEC EDGAR Analyst Report
-    if final_state.get("sec_edgar_report"):
-        analyst_reports.append(
-            Panel(
-                Markdown(final_state["sec_edgar_report"]),
-                title="SEC EDGAR Analyst",
+                Markdown(final_state["sec_synthesis_report"]),
+                title="SEC Synthesis Analyst",
                 border_style="blue",
                 padding=(1, 2),
             )
@@ -892,61 +869,37 @@ def run_analysis():
                             message_buffer.add_tool_call(tool_call.name, tool_call.args)
 
                 # Update reports and agent status based on chunk content
-                # Analyst Team Reports
-                if "market_report" in chunk and chunk["market_report"]:
+                # Analyst Team Reports (SEC-only sequence)
+                if "sec_10k_report" in chunk and chunk["sec_10k_report"]:
                     message_buffer.update_report_section(
-                        "market_report", chunk["market_report"]
+                        "sec_10k_report", chunk["sec_10k_report"]
                     )
-                    message_buffer.update_agent_status("Market Analyst", "completed")
-                    # Set next analyst to in_progress
-                    if "social" in selections["analysts"]:
-                        message_buffer.update_agent_status(
-                            "Social Analyst", "in_progress"
-                        )
+                    message_buffer.update_agent_status("Sec_10k Analyst", "completed")
+                    if any(a.value == "sec_10q" for a in selections["analysts"]):
+                        message_buffer.update_agent_status("Sec_10q Analyst", "in_progress")
 
-                if "sentiment_report" in chunk and chunk["sentiment_report"]:
+                if "sec_10q_report" in chunk and chunk["sec_10q_report"]:
                     message_buffer.update_report_section(
-                        "sentiment_report", chunk["sentiment_report"]
+                        "sec_10q_report", chunk["sec_10q_report"]
                     )
-                    message_buffer.update_agent_status("Social Analyst", "completed")
-                    # Set next analyst to in_progress
-                    if "news" in selections["analysts"]:
-                        message_buffer.update_agent_status(
-                            "News Analyst", "in_progress"
-                        )
+                    message_buffer.update_agent_status("Sec_10q Analyst", "completed")
+                    if any(a.value == "sec_8k" for a in selections["analysts"]):
+                        message_buffer.update_agent_status("Sec_8k Analyst", "in_progress")
 
-                if "news_report" in chunk and chunk["news_report"]:
+                if "sec_8k_report" in chunk and chunk["sec_8k_report"]:
                     message_buffer.update_report_section(
-                        "news_report", chunk["news_report"]
+                        "sec_8k_report", chunk["sec_8k_report"]
                     )
-                    message_buffer.update_agent_status("News Analyst", "completed")
-                    # Set next analyst to in_progress
-                    if "fundamentals" in selections["analysts"]:
-                        message_buffer.update_agent_status(
-                            "Fundamentals Analyst", "in_progress"
-                        )
+                    message_buffer.update_agent_status("Sec_8k Analyst", "completed")
+                    if any(a.value == "sec_synthesis" for a in selections["analysts"]):
+                        message_buffer.update_agent_status("Sec_synthesis Analyst", "in_progress")
 
-                if "fundamentals_report" in chunk and chunk["fundamentals_report"]:
+                if "sec_synthesis_report" in chunk and chunk["sec_synthesis_report"]:
                     message_buffer.update_report_section(
-                        "fundamentals_report", chunk["fundamentals_report"]
+                        "sec_synthesis_report", chunk["sec_synthesis_report"]
                     )
-                    message_buffer.update_agent_status(
-                        "Fundamentals Analyst", "completed"
-                    )
-                    # Set next analyst to in_progress
-                    if "sec_edgar" in selections["analysts"]:
-                        message_buffer.update_agent_status(
-                            "SEC EDGAR Analyst", "in_progress"
-                        )
-
-                if "sec_edgar_report" in chunk and chunk["sec_edgar_report"]:
-                    message_buffer.update_report_section(
-                        "sec_edgar_report", chunk["sec_edgar_report"]
-                    )
-                    message_buffer.update_agent_status(
-                        "SEC EDGAR Analyst", "completed"
-                    )
-                    # Set all research team members to in_progress
+                    message_buffer.update_agent_status("Sec_synthesis Analyst", "completed")
+                    # Move to research team
                     update_research_team_status("in_progress")
 
                 # Research Team - Handle Investment Debate State

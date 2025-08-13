@@ -3,6 +3,10 @@ from .utils.agent_states import AgentState, InvestDebateState, RiskDebateState
 from .utils.memory import FinancialSituationMemory
 
 from .analysts.sec_edgar_analyst import create_sec_edgar_analyst
+from .analysts.sec_10k_analyst import create_sec_10k_analyst
+from .analysts.sec_10q_analyst import create_sec_10q_analyst
+from .analysts.sec_8k_analyst import create_sec_8k_analyst
+from .analysts.sec_synthesis_analyst import create_sec_synthesis_analyst
 from .analysts.fundamentals_analyst import create_fundamentals_analyst
 from .analysts.market_analyst import create_market_analyst
 from .analysts.news_analyst import create_news_analyst
@@ -40,4 +44,8 @@ __all__ = [
     "create_social_media_analyst",
     "create_trader",
     "create_sec_edgar_analyst",
+    "create_sec_10k_analyst",
+    "create_sec_10q_analyst",
+    "create_sec_8k_analyst",
+    "create_sec_synthesis_analyst",
 ]

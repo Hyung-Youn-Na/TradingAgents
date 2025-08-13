@@ -34,7 +34,7 @@ class TradingAgentsGraph:
 
     def __init__(
         self,
-        selected_analysts=["market", "social", "news", "fundamentals", "sec_edgar"],
+        selected_analysts=["sec_10k", "sec_10q", "sec_8k", "sec_synthesis"],
         debug=False,
         config: Dict[str, Any] = None,
     ):
@@ -113,54 +113,22 @@ class TradingAgentsGraph:
     def _create_tool_nodes(self) -> Dict[str, ToolNode]:
         """Create tool nodes for different data sources."""
         return {
-            "market": ToolNode(
+            "sec_10k": ToolNode(
                 [
-                    # online tools
-                    self.toolkit.get_YFin_data_online,
-                    self.toolkit.get_stockstats_indicators_report_online,
-                    # offline tools
-                    self.toolkit.get_YFin_data,
-                    self.toolkit.get_stockstats_indicators_report,
-                ]
-            ),
-            "social": ToolNode(
-                [
-                    # online tools
-                    self.toolkit.get_stock_news_openai,
-                    # offline tools
-                    self.toolkit.get_reddit_stock_info,
-                ]
-            ),
-            "news": ToolNode(
-                [
-                    # online tools
-                    self.toolkit.get_global_news_openai,
-                    self.toolkit.get_google_news,
-                    # offline tools
-                    self.toolkit.get_finnhub_news,
-                    self.toolkit.get_reddit_news,
-                ]
-            ),
-            "fundamentals": ToolNode(
-                [
-                    # online tools
-                    self.toolkit.get_fundamentals_openai,
-                    # offline tools
-                    self.toolkit.get_finnhub_company_insider_sentiment,
-                    self.toolkit.get_finnhub_company_insider_transactions,
-                    self.toolkit.get_simfin_balance_sheet,
-                    self.toolkit.get_simfin_cashflow,
-                    self.toolkit.get_simfin_income_stmt,
-                ]
-            ),
-            "sec_edgar": ToolNode(
-                [
-                    # SEC EDGAR tools
                     self.toolkit.get_sec_edgar_10k_analysis,
+                ]
+            ),
+            "sec_10q": ToolNode(
+                [
                     self.toolkit.get_sec_edgar_10q_analysis,
+                ]
+            ),
+            "sec_8k": ToolNode(
+                [
                     self.toolkit.get_sec_edgar_8k_analysis,
                 ]
             ),
+            "sec_synthesis": ToolNode([]),
         }
 
     def propagate(self, company_name, trade_date):
@@ -203,11 +171,15 @@ class TradingAgentsGraph:
         self.log_states_dict[str(trade_date)] = {
             "company_of_interest": final_state["company_of_interest"],
             "trade_date": final_state["trade_date"],
-            "market_report": final_state["market_report"],
-            "sentiment_report": final_state["sentiment_report"],
-            "news_report": final_state["news_report"],
-            "fundamentals_report": final_state["fundamentals_report"],
-            "sec_edgar_report": final_state["sec_edgar_report"],
+            "market_report": final_state.get("market_report", ""),
+            "sentiment_report": final_state.get("sentiment_report", ""),
+            "news_report": final_state.get("news_report", ""),
+            "fundamentals_report": final_state.get("fundamentals_report", ""),
+            "sec_edgar_report": final_state.get("sec_edgar_report", ""),
+            "sec_10k_report": final_state.get("sec_10k_report", ""),
+            "sec_10q_report": final_state.get("sec_10q_report", ""),
+            "sec_8k_report": final_state.get("sec_8k_report", ""),
+            "sec_synthesis_report": final_state.get("sec_synthesis_report", ""),
             "investment_debate_state": {
                 "bull_history": final_state["investment_debate_state"]["bull_history"],
                 "bear_history": final_state["investment_debate_state"]["bear_history"],
